@@ -1,6 +1,8 @@
 package DataBase;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 
 public class DBConnection {
 
@@ -11,15 +13,18 @@ public class DBConnection {
     static {
         try {
             Class.forName("org.h2.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("H2 Driver bulunamadı", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
+    // 🔴 MAIN BURAYI ÇAĞIRIYOR
     public static void init() {
+
         try (Connection c = DriverManager.getConnection(URL, USER, PASS);
              Statement st = c.createStatement()) {
 
+            // USERS
             st.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,6 +34,7 @@ public class DBConnection {
                 )
             """);
 
+            // DEFAULT USERS
             st.execute("""
                 INSERT INTO users (username,password,role)
                 SELECT 'garson','123','GARSON'
@@ -47,12 +53,35 @@ public class DBConnection {
                 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username='mudur')
             """);
 
-        } catch (SQLException e) {
+            // CATEGORIES
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS categories (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(50)
+                )
+            """);
+
+            // PRODUCTS
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS products (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100),
+                    price DOUBLE,
+                    category_id INT,
+                    FOREIGN KEY (category_id) REFERENCES categories(id)
+                )
+            """);
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASS);
+    public static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(URL, USER, PASS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

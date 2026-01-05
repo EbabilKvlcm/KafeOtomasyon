@@ -12,8 +12,9 @@ public class UserDAO {
     public User login(String username, String password) {
 
         try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(
-                     "SELECT * FROM users WHERE username=? AND password=?")) {
+             PreparedStatement ps =
+                     c.prepareStatement(
+                             "SELECT * FROM users WHERE username=? AND password=?")) {
 
             ps.setString(1, username);
             ps.setString(2, password);
@@ -24,7 +25,6 @@ public class UserDAO {
                 return new User(
                         rs.getInt("id"),
                         rs.getString("username"),
-                        rs.getString("password"),
                         Role.valueOf(rs.getString("role"))
                 );
             }
@@ -32,6 +32,7 @@ public class UserDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return null;
     }
 }

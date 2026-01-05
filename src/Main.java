@@ -1,10 +1,18 @@
 import DataBase.DBConnection;
 import Views.LogIn;
+import Views.UIStyle;
 
 public class Main {
 
     public static void main(String[] args) {
-        DBConnection.init();   // veritabanını hazırlar
-        new LogIn();           // login ekranını açar
+
+        // Global modern UI
+        UIStyle.apply();
+
+        // Veritabanı init
+        DBConnection.init();
+
+        // Login ekranı
+        new LogIn();
     }
 }

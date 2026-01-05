@@ -1,6 +1,7 @@
 package Entities;
 
 public class OrderItem {
+
     private Product product;
     private int quantity;
 
@@ -9,23 +10,19 @@ public class OrderItem {
         this.quantity = 1;
     }
 
-    public void increase() {
-        quantity++;
-    }
+    public void increase() { quantity++; }
+    public void decrease() { quantity--; }
 
-    public void decrease() {
-        if (quantity > 1) quantity--;
-    }
+    public int getQuantity() { return quantity; }
+    public Product getProduct() { return product; }
 
     public double getTotalPrice() {
-        return quantity * product.getPrice();
+        return product.getPrice() * quantity;
     }
-
-    public Product getProduct() { return product; }
-    public int getQuantity() { return quantity; }
 
     @Override
     public String toString() {
-        return product.getName() + " x" + quantity + "  " + getTotalPrice() + " ₺";
+        return product.getName() + " x" + quantity +
+                " = " + getTotalPrice() + " ₺";
     }
 }

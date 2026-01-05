@@ -8,7 +8,7 @@ import Entities.User;
 import javax.swing.*;
 import java.awt.*;
 
-public class MudurView extends JFrame {
+public class MudurView extends BaseView {
 
     private MudurController controller = new MudurController();
 
@@ -18,24 +18,41 @@ public class MudurView extends JFrame {
     private DefaultListModel<Product> productModel = new DefaultListModel<>();
     private JList<Product> productList = new JList<>(productModel);
 
+    private JComboBox<Category> cmbCategory = new JComboBox<>();
+
+    private JTextField txtCategoryName = new JTextField();
+    private JTextField txtProductName = new JTextField();
+    private JTextField txtProductPrice = new JTextField();
+    private JTextField txtNewPrice = new JTextField();
+
     public MudurView(User user) {
 
         setTitle("Müdür Paneli - " + user.getUsername());
-        setSize(800, 450);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(1100, 550);
         setLayout(new BorderLayout());
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        /* ---------------- SOL: KATEGORİ ---------------- */
-        JPanel categoryPanel = new JPanel(new BorderLayout());
+        /* ---------- ÇIKIŞ ---------- */
+        JButton btnLogout = new JButton("Çıkış Yap");
+        btnLogout.setBackground(new Color(220, 53, 69));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.addActionListener(e -> logout());
+
+        JPanel top = new JPanel(new BorderLayout());
+        top.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        top.add(btnLogout, BorderLayout.EAST);
+        add(top, BorderLayout.NORTH);
+
+        /* ---------- KATEGORİ PANEL ---------- */
+        JPanel categoryPanel = new JPanel(new BorderLayout(5, 5));
         categoryPanel.setBorder(BorderFactory.createTitledBorder("Kategoriler"));
 
-        JTextField txtCategory = new JTextField();
         JButton btnAddCategory = new JButton("Kategori Ekle");
         JButton btnDeleteCategory = new JButton("Kategori Sil");
 
         btnAddCategory.addActionListener(e -> {
-            controller.addCategory(txtCategory.getText());
-            txtCategory.setText("");
+            controller.addCategory(txtCategoryName.getText());
+            txtCategoryName.setText("");
             loadCategories();
             loadCategoryCombo();
         });
@@ -46,76 +63,99 @@ public class MudurView extends JFrame {
             loadCategoryCombo();
         });
 
-        JPanel categoryBottom = new JPanel(new GridLayout(2, 1));
-        categoryBottom.add(btnAddCategory);
+        JPanel categoryTop = new JPanel(new BorderLayout(5, 5));
+        categoryTop.add(txtCategoryName, BorderLayout.CENTER);
+        categoryTop.add(btnAddCategory, BorderLayout.EAST);
+
+        JPanel categoryBottom = new JPanel(new GridLayout(1, 1, 5, 5));
         categoryBottom.add(btnDeleteCategory);
 
-        categoryPanel.add(txtCategory, BorderLayout.NORTH);
+        categoryPanel.add(categoryTop, BorderLayout.NORTH);
         categoryPanel.add(new JScrollPane(categoryList), BorderLayout.CENTER);
         categoryPanel.add(categoryBottom, BorderLayout.SOUTH);
 
-        /* ---------------- ORTA: ÜRÜN EKLE ---------------- */
-        JPanel productAddPanel = new JPanel(new GridLayout(7, 1));
+        /* ---------- ÜRÜN EKLE PANEL ---------- */
+        JPanel productAddPanel = new JPanel(new GridLayout(8, 1, 5, 5));
         productAddPanel.setBorder(BorderFactory.createTitledBorder("Ürün Ekle"));
-
-        JLabel lblName = new JLabel("Ürün Adı:");
-        JTextField txtName = new JTextField();
-
-        JLabel lblPrice = new JLabel("Fiyat:");
-        JTextField txtPrice = new JTextField();
-
-        JLabel lblCategory = new JLabel("Kategori:");
-        JComboBox<Category> cmbCategory = new JComboBox<>();
 
         JButton btnAddProduct = new JButton("Ürün Ekle");
 
         btnAddProduct.addActionListener(e -> {
             try {
                 controller.addProduct(
-                        txtName.getText(),
-                        Double.parseDouble(txtPrice.getText()),
+                        txtProductName.getText(),
+                        Double.parseDouble(txtProductPrice.getText()),
                         (Category) cmbCategory.getSelectedItem()
                 );
-                txtName.setText("");
-                txtPrice.setText("");
+                txtProductName.setText("");
+                txtProductPrice.setText("");
                 loadProducts();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Fiyat sayısal olmalı!");
             }
         });
 
-        productAddPanel.add(lblName);
-        productAddPanel.add(txtName);
-        productAddPanel.add(lblPrice);
-        productAddPanel.add(txtPrice);
-        productAddPanel.add(lblCategory);
+        productAddPanel.add(new JLabel("Ürün Adı"));
+        productAddPanel.add(txtProductName);
+        productAddPanel.add(new JLabel("Fiyat"));
+        productAddPanel.add(txtProductPrice);
+        productAddPanel.add(new JLabel("Kategori"));
         productAddPanel.add(cmbCategory);
+        productAddPanel.add(new JLabel());
         productAddPanel.add(btnAddProduct);
 
-        /* ---------------- SAĞ: ÜRÜNLER ---------------- */
-        JPanel productListPanel = new JPanel(new BorderLayout());
-        productListPanel.setBorder(BorderFactory.createTitledBorder("Ürünler"));
+        /* ---------- ÜRÜN LİSTESİ PANEL ---------- */
+        JPanel productPanel = new JPanel(new BorderLayout(5, 5));
+        productPanel.setBorder(BorderFactory.createTitledBorder("Ürünler"));
 
         JButton btnDeleteProduct = new JButton("Ürünü Sil");
+        JButton btnUpdatePrice = new JButton("Fiyat Güncelle");
+
         btnDeleteProduct.addActionListener(e -> {
             controller.deleteProduct(productList.getSelectedValue());
             loadProducts();
         });
 
-        productListPanel.add(new JScrollPane(productList), BorderLayout.CENTER);
-        productListPanel.add(btnDeleteProduct, BorderLayout.SOUTH);
+        btnUpdatePrice.addActionListener(e -> {
+            try {
+                controller.updateProductPrice(
+                        productList.getSelectedValue(),
+                        Double.parseDouble(txtNewPrice.getText())
+                );
+                txtNewPrice.setText("");
+                loadProducts();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Yeni fiyat geçersiz!");
+            }
+        });
 
-        /* ---------------- EKLE ---------------- */
-        add(categoryPanel, BorderLayout.WEST);
-        add(productAddPanel, BorderLayout.CENTER);
-        add(productListPanel, BorderLayout.EAST);
+        JPanel productBottom = new JPanel(new GridLayout(4, 1, 5, 5));
+        productBottom.add(new JLabel("Yeni Fiyat"));
+        productBottom.add(txtNewPrice);
+        productBottom.add(btnUpdatePrice);
+        productBottom.add(btnDeleteProduct);
+
+        productPanel.add(new JScrollPane(productList), BorderLayout.CENTER);
+        productPanel.add(productBottom, BorderLayout.SOUTH);
+
+        /* ---------- ANA YERLEŞİM ---------- */
+        JPanel main = new JPanel(new GridLayout(1, 3, 15, 0));
+        main.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        main.add(categoryPanel);
+        main.add(productAddPanel);
+        main.add(productPanel);
+
+        add(main, BorderLayout.CENTER);
 
         loadCategories();
         loadProducts();
-        loadCategoryCombo(cmbCategory);
+        loadCategoryCombo();
 
         setVisible(true);
     }
+
+    /* ---------- LOAD METOTLARI ---------- */
 
     private void loadCategories() {
         categoryModel.clear();
@@ -132,13 +172,9 @@ public class MudurView extends JFrame {
     }
 
     private void loadCategoryCombo() {
-        // boş, sadece çağrı için
-    }
-
-    private void loadCategoryCombo(JComboBox<Category> cmb) {
-        cmb.removeAllItems();
+        cmbCategory.removeAllItems();
         for (Category c : controller.getCategories()) {
-            cmb.addItem(c);
+            cmbCategory.addItem(c);
         }
     }
 }

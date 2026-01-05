@@ -19,7 +19,6 @@ public class LogIn extends JFrame {
         setTitle("Kafe Otomasyonu - Login");
         setSize(300, 200);
         setLayout(null);
-        setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         JLabel lblUser = new JLabel("Kullanıcı Adı");
@@ -56,10 +55,8 @@ public class LogIn extends JFrame {
 
         dispose();
 
-        switch (user.getRole()) {
-            case GARSON -> new GarsonView(user);
-            case KASA   -> new KasaView(user);
-            case MUDUR  -> new MudurView(user);
-        }
+        if (user.getRole() == Role.GARSON) new GarsonView(user);
+        if (user.getRole() == Role.KASA) new KasaView(user);
+        if (user.getRole() == Role.MUDUR) new MudurView(user);
     }
 }
