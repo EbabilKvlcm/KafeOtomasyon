@@ -11,20 +11,20 @@ import java.util.List;
 
 public class GarsonView extends BaseView {
 
-    private GarsonController controller = new GarsonController();
+    private final GarsonController controller = new GarsonController();
 
-    private DefaultListModel<Table> tableModel = new DefaultListModel<>();
-    private JList<Table> tableList = new JList<>(tableModel);
+    private final DefaultListModel<Table> tableModel = new DefaultListModel<>();
+    private final JList<Table> tableList = new JList<>(tableModel);
 
-    private JComboBox<Category> cmbCategory = new JComboBox<>();
+    private final JComboBox<Category> cmbCategory = new JComboBox<>();
 
-    private DefaultListModel<Product> productModel = new DefaultListModel<>();
-    private JList<Product> productList = new JList<>(productModel);
+    private final DefaultListModel<Product> productModel = new DefaultListModel<>();
+    private final JList<Product> productList = new JList<>(productModel);
 
-    private DefaultListModel<OrderItem> orderModel = new DefaultListModel<>();
-    private JList<OrderItem> orderList = new JList<>(orderModel);
+    private final DefaultListModel<OrderItem> orderModel = new DefaultListModel<>();
+    private final JList<OrderItem> orderList = new JList<>(orderModel);
 
-    private JLabel lblTotal = new JLabel("Toplam: 0 ₺");
+    private final JLabel lblTotal = new JLabel("Toplam: 0 ₺");
 
     private Table selectedTable;
 
@@ -32,10 +32,10 @@ public class GarsonView extends BaseView {
 
         setTitle("Garson Paneli - " + user.getUsername());
         setSize(1200, 600);
-        setLayout(new BorderLayout(10,10));
+        setLayout(new BorderLayout(10, 10));
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        /* ---------- ÜST BAR ---------- */
+        /* ================= ÜST BAR ================= */
         JLabel lblTitle = new JLabel("Garson Paneli");
         lblTitle.setFont(lblTitle.getFont().deriveFont(18f));
 
@@ -43,34 +43,34 @@ public class GarsonView extends BaseView {
         btnLogout.addActionListener(e -> logout());
 
         JPanel top = new JPanel(new BorderLayout());
-        top.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        top.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         top.add(lblTitle, BorderLayout.WEST);
         top.add(btnLogout, BorderLayout.EAST);
         add(top, BorderLayout.NORTH);
 
-        /* ---------- MASALAR ---------- */
+        /* ================= MASALAR ================= */
         controller.getTables().forEach(tableModel::addElement);
 
         tableList.setFixedCellHeight(40);
         tableList.setBorder(BorderFactory.createTitledBorder("Masalar"));
 
         tableList.setCellRenderer((list, table, index, isSelected, focus) -> {
-            JLabel lbl = new JLabel(table.toString());
-            lbl.setOpaque(true);
-            lbl.setBorder(BorderFactory.createEmptyBorder(8,8,8,8));
+            JLabel label = new JLabel(table.toString());
+            label.setOpaque(true);
+            label.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
             Color bg =
-                    table.getStatus() == TableStatus.EMPTY ? new Color(40,167,69) :
-                            table.getStatus() == TableStatus.ORDERED ? new Color(255,193,7) :
-                                    new Color(220,53,69);
+                    table.getStatus() == TableStatus.EMPTY ? new Color(40, 167, 69) :
+                            table.getStatus() == TableStatus.ORDERED ? new Color(255, 193, 7) :
+                                    new Color(220, 53, 69);
 
-            lbl.setBackground(bg);
+            label.setBackground(bg);
 
             if (isSelected) {
-                lbl.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+                label.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
             }
 
-            return lbl;
+            return label;
         });
 
         tableList.addListSelectionListener(e -> {
@@ -78,7 +78,7 @@ public class GarsonView extends BaseView {
             loadOrders();
         });
 
-        /* ---------- KATEGORİ & ÜRÜNLER ---------- */
+        /* ================= KATEGORİ / ÜRÜN ================= */
         controller.getCategories().forEach(cmbCategory::addItem);
         cmbCategory.addActionListener(e -> loadProducts());
 
@@ -86,6 +86,7 @@ public class GarsonView extends BaseView {
         productList.setFixedCellHeight(35);
 
         productList.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && selectedTable != null) {
                     Product p = productList.getSelectedValue();
@@ -102,10 +103,25 @@ public class GarsonView extends BaseView {
         productPanel.add(cmbCategory, BorderLayout.NORTH);
         productPanel.add(new JScrollPane(productList), BorderLayout.CENTER);
 
-        /* ---------- SİPARİŞ ---------- */
-        orderList.setBorder(BorderFactory.createTitledBorder("Sipariş"));
-
+        /* ================= SİPARİŞ ================= */
+        JButton btnDecrease = new JButton("Adet -1");
+        JButton btnRemove = new JButton("Ürünü Sil");
         JButton btnSend = new JButton("Kasaya Gönder");
+
+        btnDecrease.addActionListener(e -> {
+            if (selectedTable == null) return;
+            OrderItem item = orderList.getSelectedValue();
+            controller.decreaseProduct(selectedTable, item);
+            loadOrders();
+        });
+
+        btnRemove.addActionListener(e -> {
+            if (selectedTable == null) return;
+            OrderItem item = orderList.getSelectedValue();
+            controller.removeProduct(selectedTable, item);
+            loadOrders();
+        });
+
         btnSend.addActionListener(e -> {
             if (selectedTable == null) return;
             controller.sendToKasa(selectedTable);
@@ -113,14 +129,19 @@ public class GarsonView extends BaseView {
             tableList.repaint();
         });
 
+        JPanel orderButtons = new JPanel(new GridLayout(1, 3, 5, 5));
+        orderButtons.add(btnDecrease);
+        orderButtons.add(btnRemove);
+        orderButtons.add(btnSend);
+
         JPanel orderPanel = new JPanel(new BorderLayout());
         orderPanel.add(lblTotal, BorderLayout.NORTH);
         orderPanel.add(new JScrollPane(orderList), BorderLayout.CENTER);
-        orderPanel.add(btnSend, BorderLayout.SOUTH);
+        orderPanel.add(orderButtons, BorderLayout.SOUTH);
 
-        /* ---------- ANA ---------- */
-        JPanel main = new JPanel(new GridLayout(1,3,10,0));
-        main.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        /* ================= ANA ================= */
+        JPanel main = new JPanel(new GridLayout(1, 3, 10, 0));
+        main.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         main.add(new JScrollPane(tableList));
         main.add(productPanel);
@@ -130,11 +151,15 @@ public class GarsonView extends BaseView {
         setVisible(true);
     }
 
+    /* ================= METOTLAR ================= */
+
     private void loadProducts() {
         productModel.clear();
         Category c = (Category) cmbCategory.getSelectedItem();
         if (c == null) return;
-        controller.getProductsByCategory(c).forEach(productModel::addElement);
+
+        controller.getProductsByCategory(c)
+                .forEach(productModel::addElement);
     }
 
     private void loadOrders() {
@@ -147,10 +172,11 @@ public class GarsonView extends BaseView {
         if (list == null) return;
 
         double total = 0;
-        for (OrderItem i : list) {
-            orderModel.addElement(i);
-            total += i.getTotalPrice();
+        for (OrderItem item : list) {
+            orderModel.addElement(item);
+            total += item.getTotalPrice();
         }
+
         lblTotal.setText("Toplam: " + total + " ₺");
     }
 }

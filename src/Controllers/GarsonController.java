@@ -7,17 +7,18 @@ import Entities.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class GarsonController {
 
     private CategoryDAO categoryDAO = new CategoryDAO();
     private ProductDAO productDAO = new ProductDAO();
 
+    /* ---------- MASALAR ---------- */
     public List<Table> getTables() {
         return new ArrayList<>(OrderStore.tableMap.values());
     }
 
+    /* ---------- KATEGORİ / ÜRÜN ---------- */
     public List<Category> getCategories() {
         return categoryDAO.getAll();
     }
@@ -30,6 +31,11 @@ public class GarsonController {
             }
         }
         return result;
+    }
+
+    /* ---------- SİPARİŞ ---------- */
+    public List<OrderItem> getOrder(Table table) {
+        return OrderStore.activeOrders.get(table.getId());
     }
 
     public void addProduct(Table table, Product product) {
@@ -49,8 +55,26 @@ public class GarsonController {
         table.setStatus(TableStatus.ORDERED);
     }
 
-    public List<OrderItem> getOrder(Table table) {
-        return OrderStore.activeOrders.get(table.getId());
+    /* ✅ EN SAĞLIKLI YÖNTEM: CONTROLLER YÖNETİR */
+    public void decreaseProduct(Table table, OrderItem item) {
+        if (table == null || item == null) return;
+
+        List<OrderItem> list = getOrder(table);
+        if (list == null) return;
+
+        item.decrease();
+        if (item.getQuantity() <= 0) {
+            list.remove(item);
+        }
+    }
+
+    public void removeProduct(Table table, OrderItem item) {
+        if (table == null || item == null) return;
+
+        List<OrderItem> list = getOrder(table);
+        if (list != null) {
+            list.remove(item);
+        }
     }
 
     public void sendToKasa(Table table) {
