@@ -5,74 +5,60 @@ import DataBase.ProductDAO;
 import DataBase.OrderStore;
 import Entities.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class GarsonController {
 
     private CategoryDAO categoryDAO = new CategoryDAO();
     private ProductDAO productDAO = new ProductDAO();
 
+    public List<Table> getTables() {
+        return new ArrayList<>(OrderStore.tableMap.values());
+    }
+
     public List<Category> getCategories() {
         return categoryDAO.getAll();
     }
 
-    public List<Product> getProductsByCategory(Category category) {
+    public List<Product> getProductsByCategory(Category c) {
         List<Product> result = new ArrayList<>();
         for (Product p : productDAO.getAll()) {
-            if (p.getCategoryId() == category.getId()) {
+            if (p.getCategoryId() == c.getId()) {
                 result.add(p);
             }
         }
         return result;
     }
 
-    public List<Table> getTables() {
-        List<Table> tables = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            tables.add(new Table(i, "Masa " + i));
-        }
-        return tables;
-    }
+    public void addProduct(Table table, Product product) {
 
-    public void addProductToOrder(Map<Integer, List<OrderItem>> orders,
-                                  int tableId, Product product) {
-        orders.putIfAbsent(tableId, new ArrayList<>());
-        List<OrderItem> list = orders.get(tableId);
+        OrderStore.activeOrders.putIfAbsent(table.getId(), new ArrayList<>());
+        List<OrderItem> list = OrderStore.activeOrders.get(table.getId());
 
         for (OrderItem item : list) {
             if (item.getProduct().getId() == product.getId()) {
                 item.increase();
+                table.setStatus(TableStatus.ORDERED);
                 return;
             }
         }
+
         list.add(new OrderItem(product));
+        table.setStatus(TableStatus.ORDERED);
     }
 
-    public void decreaseProduct(Map<Integer, List<OrderItem>> orders,
-                                int tableId, OrderItem item) {
-        if (item == null) return;
-        item.decrease();
-        if (item.getQuantity() <= 0) {
-            orders.get(tableId).remove(item);
-        }
+    public List<OrderItem> getOrder(Table table) {
+        return OrderStore.activeOrders.get(table.getId());
     }
 
-    public void removeProduct(Map<Integer, List<OrderItem>> orders,
-                              int tableId, OrderItem item) {
-        if (item != null) {
-            orders.get(tableId).remove(item);
-        }
-    }
-
-    public double getTableTotal(List<OrderItem> list) {
-        double total = 0;
-        for (OrderItem item : list) {
-            total += item.getTotalPrice();
-        }
-        return total;
-    }
-
-    public void sendToKasa(Map<Integer, List<OrderItem>> orders, int tableId) {
-        OrderStore.kasaOrders.put(tableId, orders.get(tableId));
+    public void sendToKasa(Table table) {
+        OrderStore.kasaOrders.put(
+                table.getId(),
+                OrderStore.activeOrders.get(table.getId())
+        );
+        OrderStore.activeOrders.remove(table.getId());
+        table.setStatus(TableStatus.SENT_TO_KASA);
     }
 }

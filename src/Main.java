@@ -6,13 +6,9 @@ public class Main {
 
     public static void main(String[] args) {
 
-        // Global modern UI
-        UIStyle.apply();
+        UIStyle.apply();   // global modern stil
+        DBConnection.init(); // db başlat
 
-        // Veritabanı init
-        DBConnection.init();
-
-        // Login ekranı
-        new LogIn();
+        new LogIn(); // login ekranı
     }
 }
